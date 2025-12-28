@@ -4,10 +4,9 @@ openwrt selector https://firmware-selector.openwrt.org/
 
 
 不要ipv6, ppp
-####
+
 luci luci-ssl -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-pppox -luci-proto-ppp -odhcpd-ipv6only -odhcp6c -ip6tables -kmod-ip6tables -kmod-ipv6 -kmod-nf-conntrack6 -kmod-nf-ipt6 -kmod-nf-reject6 -luci-proto-ipv6
 
-####
 
 #!/bin/sh
 
@@ -43,7 +42,8 @@ uci set wireless.radio0.channel='auto'  # 或 '1'/'6'/'11'
 uci set wireless.radio0.country='CN'    # 中国代码
 uci set wireless.radio0.htmode='HT20'   # Nano 标准
 
-# 配置默认 AP 接口
+配置默认 AP 接口
+
 uci set wireless.default_radio0.ssid='MyNanoWiFi'          # 你的 Wi-Fi 名称
 uci set wireless.default_radio0.encryption='psk2'         # WPA2-PSK
 uci set wireless.default_radio0.key='YourStrongPassword'  # 你的密码（至少8位）
