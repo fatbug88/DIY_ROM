@@ -11,14 +11,17 @@ luci luci-ssl -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-pppox -luci-proto-
 
 #!/bin/sh
 
-# 设置 root 密码（替换 YourStrongPassword 为你的密码）
+设置 root 密码（替换 YourStrongPassword 为你的密码）
+
 echo -e 'YourStrongPassword\nYourStrongPassword' | passwd root
 
-# 设置时区为中国上海（北京时间）
+设置时区为中国上海（北京时间）
+
 uci set system.@system[0].timezone='CST-8'
 uci set system.@system[0].zonename='Asia/Shanghai'
 
-# 启用时间同步（可选，确保 NTP 服务器）
+启用时间同步（可选，确保 NTP 服务器）
+
 uci set system.ntp.enable_server='1'
 uci delete system.ntp.server  # 清空默认
 uci add_list system.ntp.server='ntp1.aliyun.com'
@@ -33,7 +36,8 @@ exit 0
 
 #!/bin/sh
 
-# 启用 radio0 并设置基本参数
+启用 radio0 并设置基本参数
+
 uci set wireless.radio0.disabled='0'
 uci set wireless.radio0.channel='auto'  # 或 '1'/'6'/'11'
 uci set wireless.radio0.country='CN'    # 中国代码
@@ -46,7 +50,8 @@ uci set wireless.default_radio0.key='YourStrongPassword'  # 你的密码（至�
 uci set wireless.default_radio0.mode='ap'
 uci set wireless.default_radio0.network='lan'
 
-# 防止重复执行（可选）
+防止重复执行（可选）
+
 uci set wireless.default_radio0.initialized='1'
 
 uci commit wireless
@@ -54,18 +59,23 @@ wifi reload  # 立即生效
 
 exit 0
 -------------------------------------------------------------------
-# 更新软件列表
+更新软件列表
+
 opkg update
 
-# 更新所有 LUCI 插件
+更新所有 LUCI 插件
+
 opkg list-upgradable | grep luci- | cut -f 1 -d ' ' | xargs opkg upgrade
 
-# 如果要更新所有软件，包括 OpenWRT 内核、固件等
+
+如果要更新所有软件，包括 OpenWRT 内核、固件等
+
 opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
 
 
 
-reinstall luci :
+reinstall luci:
+
 opkg update
 opkg instakk luci-compat
 opkg install luci-lua-runtime
