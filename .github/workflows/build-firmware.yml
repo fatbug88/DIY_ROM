@@ -33,7 +33,8 @@ on:
 
 permissions:
   contents: read
-  issues: write   # 用于把构建结果（日志摘要 / 产物信息）发布到 PR #1
+  issues: write          # 在议题/PR 下发表评论
+  pull-requests: write   # 在 PR 下发表评论
 
 jobs:
   build:
@@ -86,7 +87,8 @@ jobs:
             echo "下载：运行页面底部 Artifacts → **openwrt-${{ inputs.openwrt_version }}-xiaomi-miwifi-nano.zip**"
             echo "运行记录：<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
           } > build-result.md
-          gh api "repos/${{ github.repository }}/issues/1/comments" -F body=@build-result.md > /dev/null
+          # 评论失败不影响构建结果
+          gh api "repos/${{ github.repository }}/issues/1/comments" -F body=@build-result.md > /dev/null || true
 
       - name: 构建失败时把日志摘要发到 PR
         if: failure()
