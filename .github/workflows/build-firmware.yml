@@ -1,0 +1,67 @@
+name: 构建路由器固件 (OpenWrt ImageBuilder)
+
+# 在 Actions 页面点击 “Run workflow” 即可开始构建；
+# 参数无需修改，留空则使用安全的默认值（见各输入项说明）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_version:
+        description: 'OpenWrt 版本'
+        type: choice
+        options:
+          - '25.12.6'
+          - '24.10.8'
+          - 'SNAPSHOT'
+        default: '25.12.6'
+        required: true
+      wifi_ssid:
+        description: 'Wi-Fi 名称 (SSID)'
+        type: string
+        default: 'MyNanoWiFi'
+        required: true
+      wifi_key:
+        description: 'Wi-Fi 密码（至少 8 位；留空 = 出厂开放 WiFi，首次登录后务必自行设置）'
+        type: string
+        default: ''
+        required: false
+      root_password:
+        description: 'root 密码（留空 = 首次登录 LuCI 时设置；固件中只保存哈希，不保存明文）'
+        type: string
+        default: ''
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 构建 xiaomi_miwifi-nano 定制固件
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 ImageBuilder 宿主依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential gawk gettext rsync unzip zstd \
+            libncurses-dev python3 file wget curl ca-certificates
+
+      - name: 下载 ImageBuilder 并构建固件
+        env:
+          OPENWRT_VERSION: ${{ inputs.openwrt_version }}
+          WIFI_SSID: ${{ inputs.wifi_ssid }}
+          WIFI_KEY: ${{ inputs.wifi_key }}
+          ROOT_PASSWORD: ${{ inputs.root_password }}
+        run: bash firmware/build.sh
+
+      - name: 上传固件产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-${{ inputs.openwrt_version }}-xiaomi-miwifi-nano
+          path: out/${{ inputs.openwrt_version }}/
+          retention-days: 30
+          if-no-files-found: error

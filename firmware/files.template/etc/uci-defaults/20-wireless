@@ -1,0 +1,25 @@
+#!/bin/sh
+# ==================================================================
+# 首次开机执行：启用无线并配置默认 AP
+# 构建参数注入：SSID / 加密方式 / 密码
+# ==================================================================
+
+# 开启无线（MT7628 2.4GHz，radio0）
+uci set wireless.radio0.disabled='0'
+uci set wireless.radio0.channel='auto'
+uci set wireless.radio0.country='CN'
+uci set wireless.radio0.htmode='HT20'
+
+# 默认 AP 接口
+uci set wireless.default_radio0.ssid='__WIFI_SSID__'
+uci set wireless.default_radio0.encryption='__WIFI_ENCRYPTION__'
+if [ -n '__WIFI_KEY__' ]; then
+	uci set wireless.default_radio0.key='__WIFI_KEY__'
+fi
+uci set wireless.default_radio0.mode='ap'
+uci set wireless.default_radio0.network='lan'
+uci set wireless.default_radio0.initialized='1'
+
+uci commit wireless
+
+exit 0
