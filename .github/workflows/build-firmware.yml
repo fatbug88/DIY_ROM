@@ -33,6 +33,7 @@ on:
 
 permissions:
   contents: read
+  issues: write   # 用于把构建结果（日志摘要 / 产物信息）发布到 PR #1
 
 jobs:
   build:
@@ -47,8 +48,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential gawk gettext rsync unzip zstd \
-            libncurses-dev python3 file wget curl ca-certificates
+            build-essential gawk gettext rsync unzip zstd bzip2 \
+            patch perl libncurses-dev python3 file wget curl ca-certificates
 
       - name: 下载 ImageBuilder 并构建固件
         env:
@@ -56,12 +57,52 @@ jobs:
           WIFI_SSID: ${{ inputs.wifi_ssid }}
           WIFI_KEY: ${{ inputs.wifi_key }}
           ROOT_PASSWORD: ${{ inputs.root_password }}
-        run: bash firmware/build.sh
+        run: bash firmware/build.sh 2>&1 | tee build.log
 
       - name: 上传固件产物
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: openwrt-${{ inputs.openwrt_version }}-xiaomi-miwifi-nano
-          path: out/${{ inputs.openwrt_version }}/
+          path: |
+            out/${{ inputs.openwrt_version }}/
+            build.log
           retention-days: 30
-          if-no-files-found: error
+
+      - name: 构建成功后把产物信息发到 PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### ✅ 固件构建完成（${{ inputs.openwrt_version }} / xiaomi_miwifi-nano）"
+            echo ""
+            echo '```text'
+            ls -la "out/${{ inputs.openwrt_version }}/"
+            echo ""
+            cat "out/${{ inputs.openwrt_version }}/sha256sums.txt"
+            echo '```'
+            echo ""
+            echo "下载：运行页面底部 Artifacts → **openwrt-${{ inputs.openwrt_version }}-xiaomi-miwifi-nano.zip**"
+            echo "运行记录：<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
+          } > build-result.md
+          gh api "repos/${{ github.repository }}/issues/1/comments" -F body=@build-result.md > /dev/null
+
+      - name: 构建失败时把日志摘要发到 PR
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### ❌ 固件构建失败（${{ inputs.openwrt_version }} / xiaomi_miwifi-nano）"
+            echo ""
+            echo '<details><summary>构建日志末尾（最近 150 行）</summary>'
+            echo ""
+            echo '```text'
+            tail -n 150 build.log 2>/dev/null || echo '(没有生成日志文件)'
+            echo '```'
+            echo '</details>'
+            echo ""
+            echo "完整运行记录：<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
+          } > build-result.md
+          gh api "repos/${{ github.repository }}/issues/1/comments" -F body=@build-result.md > /dev/null || true
