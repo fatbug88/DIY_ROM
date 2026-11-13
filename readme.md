@@ -79,3 +79,39 @@ reinstall luci:
 opkg update
 opkg instakk luci-compat
 opkg install luci-lua-runtime
+
+---
+
+## 自动构建定制固件（GitHub Actions，免本地环境）
+
+本仓库已集成基于官方 ImageBuilder 的一键固件构建（小米 MiWiFi Nano）：
+
+1. 打开仓库 **Actions** 页面 → 选择 **构建路由器固件 (OpenWrt ImageBuilder)** → 点击 **Run workflow**
+2. 参数保持默认即可直接构建；也可按需修改 Wi-Fi 名称 / Wi-Fi 密码 / root 密码 / OpenWrt 版本
+3. 等待约 5–10 分钟，构建完成后在运行详情页底部 **Artifacts** 下载 `openwrt-*-xiaomi-miwifi-nano.zip`
+4. 解压得到 `*-sysupgrade.bin`，在固件升级页面刷入
+
+固件定制内容（首次开机自动生效，脚本执行后即自动删除）：
+
+- 移除 IPv6 / PPP 相关软件包（见 `firmware/packages.txt`）
+- 内置 LuCI 网页管理界面（HTTPS）+ `owut` 在线升级工具
+- 时区 Asia/Shanghai；NTP：`ntp1.aliyun.com` / `time.edu.cn` / `pool.ntp.org`
+- 无线默认开启（2.4GHz / HT20 / 国家码 CN），SSID 与加密按构建参数
+
+### 本地构建
+
+需要能访问 `downloads.openwrt.org` 的 Linux x86_64 环境：
+
+```sh
+bash firmware/build.sh
+# 或者带参数：
+WIFI_SSID=我的WiFi WIFI_KEY=mypassword123 ROOT_PASSWORD=mysecret bash firmware/build.sh
+```
+
+产物输出到 `out/<版本>/`（含 `.bin` 固件与 `sha256sums.txt` 校验文件）。
+
+### 安全提示
+
+- 默认配置下 Wi-Fi 出厂为**开放状态**（无密码），首次登录后请**立即**在 LuCI 中设置 Wi-Fi 密码与 root 密码
+- 构建参数中的密码只作为工作流输入传递，不会写入仓库；root 密码在固件中也仅以哈希形式存在
+- 刷入新固件后旧配置不会保留，请提前做好备份

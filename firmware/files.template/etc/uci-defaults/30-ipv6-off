@@ -1,0 +1,16 @@
+#!/bin/sh
+# ==================================================================
+# 首次开机执行：关闭 IPv6 相关配置
+# （配合 packages.txt 中移除的 IPv6 软件包使用）
+# ==================================================================
+
+uci -q set dhcp.lan.dhcpv6='disabled'
+uci -q set dhcp.lan.ra='disabled'
+uci -q delete network.lan.ip6assign || true
+uci -q delete network.wan6 || true
+uci -q delete network.globals.ula_prefix || true
+
+uci commit dhcp
+uci commit network
+
+exit 0

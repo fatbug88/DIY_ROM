@@ -1,0 +1,32 @@
+# ==================================================================
+# 固件软件包清单（OpenWrt 25.12.6 / ramips-mt76x8 / xiaomi_miwifi-nano）
+#
+#   pkg_name   -> 在官方默认固件基础上额外安装
+#   -pkg_name  -> 从默认固件中移除（不存在的包会被安全忽略）
+#
+# 修改后重新运行 GitHub Actions 里的构建即可生效。
+# ==================================================================
+
+# 网页管理界面（HTTPS）与在线升级工具
+luci
+luci-ssl
+owut
+
+# —— 移除 PPP / PPPoE ——
+-ppp
+-ppp-mod-pppoe
+-kmod-ppp
+-kmod-pppoe
+-kmod-pppox
+-luci-proto-ppp
+
+# —— 移除 IPv6 相关 ——
+-odhcpd-ipv6only
+-odhcp6c
+-ip6tables
+-kmod-ip6tables
+-kmod-ipv6
+-kmod-nf-conntrack6
+-kmod-nf-ipt6
+-kmod-nf-reject6
+-luci-proto-ipv6

@@ -1,0 +1,28 @@
+#!/bin/sh
+# ==================================================================
+# 首次开机执行：系统时区 / NTP / root 密码
+# （uci-defaults 脚本执行成功后会自动删除，只生效一次）
+# ==================================================================
+
+# 时区：中国标准时间（Asia/Shanghai）
+uci set system.@system[0].timezone='CST-8'
+uci set system.@system[0].zonename='Asia/Shanghai'
+
+# NTP 时间同步
+uci set system.ntp.enable_server='1'
+uci -q delete system.ntp.server
+uci add_list system.ntp.server='ntp1.aliyun.com'
+uci add_list system.ntp.server='time.edu.cn'
+uci add_list system.ntp.server='pool.ntp.org'
+uci commit system
+/etc/init.d/sysntpd restart >/dev/null 2>&1 || true
+
+# root 密码（固件构建时注入哈希；为空则跳过，首次登录 LuCI 时设置）
+ROOT_HASH='__ROOT_HASH__'
+if [ -n "$ROOT_HASH" ]; then
+	awk -v h="$ROOT_HASH" -F: 'BEGIN{OFS=":"} $1=="root"{$2=h} {print}' \
+		/etc/shadow > /etc/shadow.new && mv /etc/shadow.new /etc/shadow
+	chmod 600 /etc/shadow 2>/dev/null || true
+fi
+
+exit 0
