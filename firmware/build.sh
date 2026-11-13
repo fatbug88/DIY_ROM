@@ -66,9 +66,12 @@ if [ -z "$TARBALL" ]; then
 	echo "!! 未能在发布目录中找到 ImageBuilder 下载地址"; exit 1
 fi
 echo "==> 下载: $TARBALL"
-curl -fsSL -o "$DL_DIR/$TARBALL" "$DIST_URL/$TARBALL"
-curl -fsSL -o "$DL_DIR/sha256sums" "$DIST_URL/sha256sums"
-( cd "$DL_DIR" && awk -v f="$TARBALL" '$NF == f' sha256sums | sha256sum -c - )
+curl -fsSL --retry 3 -o "$DL_DIR/$TARBALL" "$DIST_URL/$TARBALL"
+curl -fsSL --retry 3 -o "$DL_DIR/sha256sums" "$DIST_URL/sha256sums"
+# sha256sums 每行格式为 "<哈希> *<文件名>"，比对前需剥掉文件名前的星号
+SHA_LINE="$(awk -v f="$TARBALL" '{n=$NF; sub(/^\*/, "", n); if (n == f) print}' "$DL_DIR/sha256sums")"
+[ -n "$SHA_LINE" ] || { echo "!! sha256sums 中未找到 $TARBALL"; exit 1; }
+( cd "$DL_DIR" && printf '%s\n' "$SHA_LINE" | sha256sum -c - )
 
 # ---------- 解包 ----------
 IB_NAME="$(printf '%s' "$TARBALL" | sed -E 's/\.tar\.(zst|xz|gz)$//')"
