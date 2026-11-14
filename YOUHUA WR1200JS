@@ -5,7 +5,7 @@ openwrt selector https://firmware-selector.openwrt.org/
 不要ipv6, ppp
 
 luci luci-ssl -ppp -ppp-mod-pppoe -kmod-ppp -kmod-pppoe -kmod-pppox -luci-proto-ppp -odhcpd-ipv6only -odhcp6c -ip6tables -kmod-ip6tables -kmod-ipv6 -kmod-nf-conntrack6 -kmod-nf-ipt6 -kmod-nf-reject6 -luci-proto-ipv6
-
+zram
 #!/bin/sh
 
 设置 root 密码（替换 YourStrongPassword 为你的密码）
